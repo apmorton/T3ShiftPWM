@@ -4,8 +4,9 @@
 #include <Arduino.h>
 #include "CT3ShiftPWM.h"
 
-
+extern byte val;
 extern const int T3ShiftPWM_latchPin;
+
 void T3ShiftPWM_InterruptHandler(void);
 
 CT3ShiftPWM T3ShiftPWM(T3ShiftPWM_latchPin, T3ShiftPWM_InterruptHandler);
@@ -25,20 +26,25 @@ void T3ShiftPWM_InterruptHandler(void) {
 	
 	for (unsigned int i = T3ShiftPWM.m_registerCount; i > 0; i--) {
 		unsigned int tmp;
+		unsigned char * tmpp;
 		
-		add_one_pin_to_byte(tmp, counter, --ptr);
-		add_one_pin_to_byte(tmp, counter, --ptr);
-		add_one_pin_to_byte(tmp, counter, --ptr);
-		add_one_pin_to_byte(tmp, counter, --ptr);
+		ptr -= 8;
+		tmpp = ptr;
 		
-		add_one_pin_to_byte(tmp, counter, --ptr);
-		add_one_pin_to_byte(tmp, counter, --ptr);
-		add_one_pin_to_byte(tmp, counter, --ptr);
-		add_one_pin_to_byte(tmp, counter, --ptr);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
+		add_one_pin_to_byte(tmp, counter, tmpp++);
 		
 		// shift right 24 bits
-		unsigned char sendByte = tmp >> 24;
-		//SPI.transfer(sendByte);
+		unsigned char sendByte = ~(tmp >> 24);
+		val = sendByte;
+		SPI.transfer(sendByte);
 	}
 	
 	// set latch pin to signal end write
